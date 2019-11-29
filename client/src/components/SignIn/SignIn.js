@@ -1,136 +1,97 @@
 import React from "react";
+import { withFormik } from "formik";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 import { LinkContainer } from "react-router-bootstrap";
-import Spinner from "react-bootstrap/Spinner";
+import * as Yup from "yup";
 import Alert from "react-bootstrap/Alert";
-import { isEmpty } from "validator";
 import httpClient from "../../axios";
 import { withRouter } from "react-router-dom";
-
 import "./signin.scss";
 
-const initialState = {
-  username: "",
-  password: "",
-  showError: false,
-  errors: [],
-  isSubmitting: false
+const SignInForm = ({
+  values,
+  errors,
+  touched,
+  isSubmitting,
+  handleChange,
+  handleSubmit
+}) => {
+  return (
+    <div>
+      <h2 className="form-header">Sign In</h2>
+      <Form onSubmit={handleSubmit}>
+        <Form.Group>
+          <Form.Label>Username</Form.Label>
+          <Form.Control
+            type="text"
+            placeholder="Enter username"
+            name="username"
+            value={values.username}
+            onChange={handleChange}
+          />
+        </Form.Group>
+
+        <Form.Group>
+          <Form.Label>Password</Form.Label>
+          <Form.Control
+            type="password"
+            placeholder="Enter Password"
+            name="password"
+            value={values.password}
+            onChange={handleChange}
+          />
+        </Form.Group>
+        <Button variant="primary" type="submit" disabled={isSubmitting}>
+          Sign In
+        </Button>
+        <p className="extra-info">
+          Not a member?{" "}
+          <LinkContainer to="/signup">
+            <a href="#!">Sign Up</a>
+          </LinkContainer>
+        </p>
+      </Form>
+      {Object.entries(touched).length > 0 && Object.entries(errors).length > 0 && (
+        <Alert variant="danger">
+          Errors:
+          {errors.server && <li>{errors.server}</li>}
+          {touched.username && errors.username && <li>{errors.username}</li>}
+          {touched.password && errors.password && <li>{errors.password}</li>}
+          {touched.confirmPassword && errors.confirmPassword && (
+            <li>{errors.confirmPassword}</li>
+          )}
+        </Alert>
+      )}
+    </div>
+  );
 };
 
-class SignIn extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { ...initialState };
+const SignIn = withFormik({
+  mapPropsToValues: props => ({
+    username: "",
+    password: "",
+    history: props.history
+  }),
+  validationSchema: Yup.object().shape({
+    username: Yup.string().required("username is required"),
+    password: Yup.string().required("password is required")
+  }),
+  handleSubmit: (values, { setSubmitting, setErrors }) => {
+    const { username, password } = values;
+    httpClient
+      .post("/auth/signin", {
+        username,
+        password
+      })
+      .then(response => {
+        values.history.push("/");
+      })
+      .catch(error => {
+        setErrors({ server: "username or password is invalid" });
+        setSubmitting(false);
+      });
   }
-
-  setShowError = value => {
-    this.setState({
-      showError: value
-    });
-  };
-
-  setIsSubmitting = value => {
-    this.setState({
-      isSubmitting: value
-    });
-  };
-
-  setErrors = errors => {
-    this.setState(prevState => {
-      const prevErrors = prevState.errors;
-      return {
-        errors: [...prevErrors, ...errors]
-      };
-    });
-  };
-
-  handleChange = fieldName => e => {
-    this.setState({
-      [fieldName]: e.target.value
-    });
-  };
-
-  handleSubmit = async e => {
-    e.preventDefault();
-    let { username, password } = this.state;
-    this.setState({ ...initialState });
-    let errors = [];
-    if (isEmpty(username)) {
-      errors = [...errors, "username field is empty"];
-    }
-    if (isEmpty(password)) {
-      errors = [...errors, "password field is empty"];
-    }
-
-    if (errors.length === 0) {
-      this.setIsSubmitting(true);
-      let { history } = this.props;
-      try {
-        await httpClient.post("/auth/signin", {
-          username,
-          password
-        });
-        history.push("/");
-      } catch (error) {
-        this.setIsSubmitting(false);
-        errors = [...errors, "username or password invalid"];
-        this.setErrors(errors);
-        this.setShowError(true);
-      }
-    } else {
-      this.setErrors(errors);
-      this.setShowError(true);
-    }
-  };
-
-  render() {
-    let { username, password, showError, errors, isSubmitting } = this.state;
-    return (
-      <div>
-        <h2 className="form-header">Sign In</h2>
-        <Form onSubmit={this.handleSubmit}>
-          <Form.Group controlId="username">
-            <Form.Label>Username</Form.Label>
-            <Form.Control
-              type="text"
-              placeholder="Enter username"
-              value={username}
-              onChange={this.handleChange("username")}
-            />
-          </Form.Group>
-
-          <Form.Group controlId="password">
-            <Form.Label>Password</Form.Label>
-            <Form.Control
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={this.handleChange("password")}
-            />
-          </Form.Group>
-          <Button variant="primary" type="submit">
-            {isSubmitting ? <Spinner animation="border" /> : "Sign In"}
-          </Button>
-          <p className="extra-info">
-            Not a member?{" "}
-            <LinkContainer to="/signup">
-              <a href="#!">Sign Up</a>
-            </LinkContainer>
-          </p>
-        </Form>
-        {showError ? (
-          <Alert variant="danger">
-            {errors.map((error, index) => (
-              <li key={index}>{error}</li>
-            ))}
-          </Alert>
-        ) : (
-          ""
-        )}
-      </div>
-    );
-  }
-}
+})(SignInForm);
 
 export default withRouter(SignIn);

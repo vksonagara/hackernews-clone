@@ -20,19 +20,6 @@ export async function createUser(request, response) {
   }
 }
 
-export async function setPassword(request, response) {
-  const { user_id, password } = request.body;
-
-  try {
-    const user = await User.findById(user_id);
-    user.password = password;
-    await user.save();
-    return response.sendStatus(200);
-  } catch (error) {
-    return response.sendStatus(500);
-  }
-}
-
 export async function signInUser(request, response) {
   const { username, password } = request.body;
 
@@ -43,15 +30,19 @@ export async function signInUser(request, response) {
       bcrypt
         .compare(password, user.password)
         .then(res => {
-          jwt.sign(safeUser, "secret", function(error, token) {
-            response.cookie("token", token).json({ token });
-          });
+          if (res === true) {
+            jwt.sign(safeUser, "secret", function(error, token) {
+              response.cookie("token", token).json({ token });
+            });
+          } else {
+            response.sendStatus(400);
+          }
         })
         .catch(err => {
-          response.sendStatus(300);
+          response.sendStatus(500);
         });
     } else {
-      response.sendStatus(300);
+      response.sendStatus(400);
     }
   } catch (error) {
     console.log(error);

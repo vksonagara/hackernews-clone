@@ -83,11 +83,13 @@ const SignUp = withFormik({
     username: "",
     password: "",
     confirmPassword: "",
-    props
+    history: props.history
   }),
   validationSchema: Yup.object().shape({
     username: Yup.string().required("username is required"),
-    password: Yup.string().required("password is required"),
+    password: Yup.string()
+      .min(8, "password must be 8 or more characters")
+      .required("password is required"),
     confirmPassword: Yup.string().test(
       "match",
       "passwords do not match",
@@ -104,7 +106,7 @@ const SignUp = withFormik({
         password
       })
       .then(response => {
-        values.props.history.push("/signin");
+        values.history.push("/signin");
       })
       .catch(error => {
         setErrors({ server: "that username is already taken" });

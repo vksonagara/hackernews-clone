@@ -42,6 +42,29 @@ export async function getPosts(request, response) {
   }
 }
 
+export async function getPost(request, response) {
+  let { postId } = request.params;
+  try {
+    let post = await Post.findById(postId).populate("user_id");
+    if (post) {
+      post = {
+        id: post._id,
+        title: post.title,
+        text: post.text,
+        relativeTime: moment(post.created_at).fromNow(),
+        commentsCount: post.comments.length,
+        username: post.user_id.username
+      };
+      response.json(post);
+    } else {
+      response.sendStatus(404);
+    }
+  } catch (error) {
+    console.log(error);
+    response.sendStatus(500);
+  }
+}
+
 // Helper type controllers
 export async function addComment(post_id, comment_id) {
   const post = await Post.findById(post_id);
