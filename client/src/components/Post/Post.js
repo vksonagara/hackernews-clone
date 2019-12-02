@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
-import Row from "react-bootstrap/Row";
-import Col from "react-bootstrap/Col";
-import Card from "react-bootstrap/Card";
+import React, { useState, useEffect, Fragment } from "react";
+import { Row, Col, Card } from "react-bootstrap";
 import { useParams, useHistory } from "react-router-dom";
 import httpClient from "../../axios";
+import CreateComment from "./CreateComment";
+import Comments from "./Comments";
 
 const initialPost = {
   id: "",
@@ -27,22 +27,38 @@ export default function Post(props) {
       .catch(error => {
         history.push("/");
       });
-  }, []);
+  }, [postId, history]);
+
+  const { title, text, relativeTime, username, commentsCount } = post;
 
   return (
-    <Row>
-      <Col>
-        <Card>
-          <Card.Body>
-            <Card.Title>{post.title}</Card.Title>
-            <Card.Subtitle className="mb-2 text-muted">
-              By <a href="#!">Vinod</a>, 3 hours ago | 6{" "}
-              <a href="#!">comments</a>
-            </Card.Subtitle>
-            <Card.Text>{post.text}</Card.Text>
-          </Card.Body>
-        </Card>
-      </Col>
-    </Row>
+    <Fragment>
+      <Row>
+        <Col>
+          <Card>
+            <Card.Body>
+              <Card.Title>{title}</Card.Title>
+              <Card.Subtitle className="mb-2 text-muted">
+                By <a href="#!">{username}</a>, {relativeTime} | {commentsCount}{" "}
+                <a href="#!">comments</a>
+              </Card.Subtitle>
+              <Card.Text>{text}</Card.Text>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+      <Row>
+        <Col>
+          <Card>
+            <Card.Body>
+              <CreateComment />
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+      <Row>
+        <Comments />
+      </Row>
+    </Fragment>
   );
 }

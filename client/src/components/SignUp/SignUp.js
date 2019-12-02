@@ -1,10 +1,8 @@
 import React from "react";
 import { withFormik } from "formik";
-import Form from "react-bootstrap/Form";
-import Button from "react-bootstrap/Button";
+import { Form, Button, Alert } from "react-bootstrap";
 import { LinkContainer } from "react-router-bootstrap";
 import * as Yup from "yup";
-import Alert from "react-bootstrap/Alert";
 import httpClient from "../../axios";
 import { withRouter } from "react-router-dom";
 import "./signup.scss";
